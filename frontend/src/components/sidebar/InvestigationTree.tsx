@@ -563,6 +563,18 @@ export default function InvestigationTree({
                     <span className="text-[10px] text-zinc-500">◆</span>
                     <span className="truncate text-zinc-300">{ev.title}</span>
                     <span className="ml-auto text-[10px] text-zinc-600">{ev.kind}</span>
+                    <button
+                      type="button"
+                      title="Copiar evidência"
+                      aria-label={`Copiar evidência ${ev.title}`}
+                      className="ml-1 rounded px-1 text-zinc-500 hover:bg-zinc-700 hover:text-emerald-300"
+                      onClick={async (event) => {
+                        event.stopPropagation();
+                        try { await navigator.clipboard.writeText(ev.title); } catch { /* clipboard permission denied */ }
+                      }}
+                    >
+                      ⧉
+                    </button>
                   </div>
                 ))}
               </div>

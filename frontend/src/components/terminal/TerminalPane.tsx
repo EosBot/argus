@@ -380,6 +380,18 @@ export default function TerminalPane({
   const [matchCount, setMatchCount] = useState(0)
   const [currentMatch, setCurrentMatch] = useState(0)
 
+  const historyKey = `argus:terminal-history:${investigationId || 'session'}`
+
+  const persistHistory = useCallback(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const history = linesRef.current.slice(-scrollbackRef.current)
+      window.localStorage.setItem(historyKey, JSON.stringify(history))
+    } catch {
+      // Storage can be unavailable in private mode or when quota is full.
+    }
+  }, [historyKey])
+
   /* ------------------------------ helpers ------------------------- */
 
   const disposeDecorations = useCallback(() => {
@@ -427,23 +439,25 @@ export default function TerminalPane({
       if (!term) return
       term.write(`${ANSI[kind]}${data}${RESET}`)
       appendLines(data, kind)
+      persistHistory()
       // Keep search results fresh while the search bar is active.
       if (searchOpenRef.current && searchQueryRef.current) {
         runSearch(searchQueryRef.current)
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [appendLines],
+    [appendLines, persistHistory],
   )
 
   const clearTerminal = useCallback(() => {
     termRef.current?.clear()
     linesRef.current = []
+    if (typeof window !== 'undefined') window.localStorage.removeItem(historyKey)
     disposeDecorations()
     matchesRef.current = []
     setMatchCount(0)
     setCurrentMatch(0)
-  }, [disposeDecorations])
+  }, [disposeDecorations, historyKey])
 
   const exportOutput = useCallback(() => {
     const text = linesRef.current.map((l) => l.text).join('\n') + '\n'
@@ -627,6 +641,9 @@ export default function TerminalPane({
       } catch {
         /* plain text -> stdout */
       }
+      window.dispatchEvent(new CustomEvent('argus:terminal-event', {
+        detail: { type, content: data, ts: Date.now() },
+      }))
       if (type === 'clear') {
         clearTerminal()
         return
@@ -715,6 +732,28 @@ export default function TerminalPane({
       terminal.open(host)
       termRef.current = terminal
 
+      // Restore the searchable transcript for the selected investigation.
+      // This keeps a page refresh from erasing the operator's local console context.
+      try {
+        const stored = window.localStorage.getItem(historyKey)
+        if (stored) {
+          const history = JSON.parse(stored) as unknown
+          if (Array.isArray(history)) {
+            const valid = history.filter((line): line is BufferLine => (
+              !!line && typeof line === 'object' &&
+              typeof (line as BufferLine).text === 'string' &&
+              ((line as BufferLine).kind === 'stdout' || (line as BufferLine).kind === 'stderr' || (line as BufferLine).kind === 'info')
+            )).slice(-scrollbackRef.current)
+            linesRef.current = valid
+            for (const line of valid) {
+              terminal.write(`${ANSI[line.kind]}${line.text}${RESET}\r\n`)
+            }
+          }
+        }
+      } catch {
+        linesRef.current = []
+      }
+
       terminal.registerLinkProvider({
         provideLinks(lineNumber, callback) {
           const value = terminal.buffer.active.getLine(lineNumber - 1)?.translateToString(true) ?? ''
@@ -744,6 +783,8 @@ export default function TerminalPane({
       terminal.onData((data) => {
         if (data === '\r') {
           if (inputBuffer.trim()) {
+            appendLines(inputBuffer, 'stdout')
+            persistHistory()
             terminal.write('\r\n')
             const ws = wsRef.current
             if (ws && ws.readyState === WebSocket.OPEN) {
@@ -816,7 +857,7 @@ export default function TerminalPane({
       void frameStyle
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoConnect, connect, disposeDecorations, fit, toggleSearch])
+  }, [autoConnect, connect, disposeDecorations, fit, historyKey, persistHistory, toggleSearch, appendLines])
 
   /* ------------------------------ render -------------------------- */
 

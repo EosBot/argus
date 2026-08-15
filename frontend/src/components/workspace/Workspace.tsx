@@ -131,7 +131,7 @@ interface ResizeState {
    Panel content renderers
    ============================================================ */
 
-function SidebarPanel({ investigations, onNewInvestigation }: { investigations?: Parameters<typeof InvestigationTree>[0]["investigations"]; onNewInvestigation?: () => void }) {
+function SidebarPanel({ investigations, onNewInvestigation, onSelect }: { investigations?: Parameters<typeof InvestigationTree>[0]["investigations"]; onNewInvestigation?: () => void; onSelect?: Parameters<typeof InvestigationTree>[0]["onSelect"] }) {
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <div style={{ padding: "8px", borderBottom: "1px solid var(--border-subtle)" }}>
@@ -166,7 +166,7 @@ function SidebarPanel({ investigations, onNewInvestigation }: { investigations?:
         </button>
       </div>
       <div style={{ flex: 1, overflow: "auto" }}>
-        <InvestigationTree investigations={investigations} />
+        <InvestigationTree investigations={investigations} onSelect={onSelect} />
       </div>
     </div>
   );
@@ -175,7 +175,14 @@ function SidebarPanel({ investigations, onNewInvestigation }: { investigations?:
 function TerminalPanel() {
   const token = getAccessToken();
   const { investigations, isLoading } = useInvestigations();
-  const [investigationId, setInvestigationId] = useState("");
+  const [investigationId, setInvestigationId] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return window.localStorage.getItem("argus:terminal-investigation") || "";
+  });
+  useEffect(() => {
+    if (investigationId) window.localStorage.setItem("argus:terminal-investigation", investigationId);
+    else window.localStorage.removeItem("argus:terminal-investigation");
+  }, [investigationId]);
   const protocol = typeof window !== "undefined" && window.location.protocol === "https:" ? "wss" : "ws";
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -375,10 +382,11 @@ function renderPanelContent(
   onNewInvestigation?: () => void,
   lastResearch?: ResearchEvent,
   browserUrl?: string,
+  onSelect?: Parameters<typeof InvestigationTree>[0]["onSelect"],
 ) {
   switch (type) {
     case "sidebar":
-      return <SidebarPanel investigations={investigations} onNewInvestigation={onNewInvestigation} />;
+      return <SidebarPanel investigations={investigations} onNewInvestigation={onNewInvestigation} onSelect={onSelect} />;
     case "terminal":
       return <TerminalPanel />;
     case "agent-status":
@@ -416,6 +424,12 @@ function WorkspaceShell() {
   const [guideOpen, setGuideOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const resizeRef = useRef<ResizeState | null>(null);
+
+  const handleTreeSelect = useCallback((node: import("../sidebar/InvestigationTree").TreeNode) => {
+    if (node.type === "evidence") {
+      window.dispatchEvent(new CustomEvent("argus:open-safe-browser", { detail: { url: node.title } }));
+    }
+  }, []);
 
   useEffect(() => {
     setLayout(loadLayout());
@@ -723,7 +737,7 @@ function WorkspaceShell() {
                     ×
                   </button>
                 </div>
-                <div className={styles.body}>{renderPanelContent(panel.type, investigations, () => setNewInvestigationOpen(true), lastResearch, browserUrl)}</div>
+                <div className={styles.body}>{renderPanelContent(panel.type, investigations, () => setNewInvestigationOpen(true), lastResearch, browserUrl, handleTreeSelect)}</div>
               </div>
               {!isLast && (
                 <div

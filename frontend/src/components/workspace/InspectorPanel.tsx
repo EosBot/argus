@@ -20,6 +20,7 @@ interface InspectorPanelProps {
   wsUrl?: string;
   /** Max events to keep in the list. */
   maxEvents?: number;
+  lastResearch?: { query: string; results: number; status: string; ts: number };
 }
 
 /* ------------------------------------------------------------------ */
@@ -97,16 +98,14 @@ function parseMessage(raw: string): { type: string; content: string } | null {
 /* ------------------------------------------------------------------ */
 
 export default function InspectorPanel({
-  wsUrl,
   maxEvents = 200,
+  lastResearch,
 }: InspectorPanelProps) {
   const [events, setEvents] = useState<PayloadEvent[]>([]);
   const [status, setStatus] = useState<ConnStatus>("closed");
-  const wsRef = useRef<WebSocket | null>(null);
   const idRef = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoScrollRef = useRef(true);
-  const urlRef = useRef(wsUrl ?? defaultWsUrl());
 
   /* ---- auto-scroll on new events ---- */
   useEffect(() => {
@@ -123,62 +122,39 @@ export default function InspectorPanel({
     autoScrollRef.current = atBottom;
   }, []);
 
-  /* ---- websocket connection (listen-only) ---- */
+  /* ---- consume the terminal's own event stream ----
+     A second WebSocket cannot observe the terminal connection because the
+     backend is request/response, not a broadcast channel. */
   useEffect(() => {
-    urlRef.current = wsUrl ?? defaultWsUrl();
-    const url = urlRef.current;
-    if (!url) return;
-
-    setStatus("connecting");
-    const ws = new WebSocket(url);
-    wsRef.current = ws;
-
-    ws.onopen = () => setStatus("connected");
-
-    ws.onmessage = (ev: MessageEvent) => {
-      const handle = async (raw: unknown) => {
-        let text: string;
-        if (typeof raw === "string") text = raw;
-        else if (raw instanceof Blob) text = await raw.text();
-        else if (raw instanceof ArrayBuffer)
-          text = new TextDecoder().decode(raw);
-        else text = String(raw);
-        const parsed = parseMessage(text);
-        if (!parsed) return;
-        idRef.current += 1;
-        setEvents((prev) => {
-          const next = [
-            ...prev,
-            {
-              id: idRef.current,
-              type: parsed.type,
-              content: parsed.content,
-              timestamp: Date.now(),
-            },
-          ];
-          return next.length > maxEvents
-            ? next.slice(next.length - maxEvents)
-            : next;
-        });
-      };
-      void handle(ev.data);
+    const onTerminalEvent = (event: Event) => {
+      const detail = (event as CustomEvent<{ type?: string; content?: string; ts?: number }>).detail;
+      if (!detail?.content) return;
+      setStatus("connected");
+      idRef.current += 1;
+      setEvents((prev) => {
+        const next = [...prev, {
+          id: idRef.current,
+          type: detail.type || "stdout",
+          content: detail.content || "",
+          timestamp: detail.ts || Date.now(),
+        }];
+        return next.length > maxEvents ? next.slice(next.length - maxEvents) : next;
+      });
     };
+    window.addEventListener("argus:terminal-event", onTerminalEvent);
+    return () => window.removeEventListener("argus:terminal-event", onTerminalEvent);
+  }, [maxEvents]);
 
-    ws.onclose = () => {
-      wsRef.current = null;
-      setStatus("closed");
-    };
-
-    ws.onerror = () => setStatus("disconnected");
-
-    return () => {
-      ws.onclose = null;
-      ws.onmessage = null;
-      ws.onerror = null;
-      ws.close();
-      wsRef.current = null;
-    };
-  }, [wsUrl, maxEvents]);
+  useEffect(() => {
+    if (!lastResearch) return;
+    setStatus("connected");
+    setEvents((prev) => prev.some((event) => event.type === "research" && event.content.includes(lastResearch.query)) ? prev : [...prev, {
+      id: ++idRef.current,
+      type: "research",
+      content: `${lastResearch.status}: ${lastResearch.query} (${lastResearch.results} resultados)`,
+      timestamp: lastResearch.ts,
+    }]);
+  }, [lastResearch]);
 
   const clearEvents = useCallback(() => {
     setEvents([]);

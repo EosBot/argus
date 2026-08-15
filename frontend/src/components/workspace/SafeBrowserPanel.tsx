@@ -74,7 +74,10 @@ export default function SafeBrowserPanel({ initialUrl = "" }: { initialUrl?: str
       </form>
       {error && <div role="alert" className="rounded border border-red-500/30 p-3 text-red-300">{error}</div>}
       {data && <section aria-label="Conteúdo coletado" className="min-h-0 rounded border border-[var(--border-subtle)] bg-black/20 p-3">
-        <div className="break-all font-mono text-[var(--accent-primary)]">{String(data.result?.url ?? data.url)}</div>
+        <div className="flex items-start gap-2">
+          <div className="min-w-0 flex-1 break-all font-mono text-[var(--accent-primary)]">{String(data.result?.url ?? data.url)}</div>
+          <button type="button" title="Copiar URL" aria-label="Copiar URL da evidência" className="shrink-0 rounded border border-[var(--border-subtle)] px-2 py-1 text-[10px] text-[var(--text-muted)] hover:bg-[var(--surface-3)] hover:text-[var(--text-primary)]" onClick={() => { void navigator.clipboard.writeText(String(data.result?.url ?? data.url)).catch(() => undefined); }}>Copiar</button>
+        </div>
         <dl className="my-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[10px] text-[var(--text-muted)]"><dt>Status</dt><dd>{String(data.result?.status ?? data.status ?? "—")}</dd><dt>SHA-256</dt><dd className="break-all font-mono">{String(data.result?.content_hash ?? "—")}</dd><dt>Evidência</dt><dd>{data.evidence_id ?? "não vinculada"}</dd><dt>Isolamento</dt><dd>JS, downloads e service workers bloqueados</dd></dl>
         <pre className="max-h-80 overflow-auto whitespace-pre-wrap break-words border-t border-[var(--border-subtle)] pt-2 text-[11px] leading-relaxed text-[var(--text-secondary)]">{String(data.result?.content ?? data.result?.error ?? "Nenhum conteúdo textual retornado")}</pre>
       </section>}
