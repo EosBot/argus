@@ -1,0 +1,237 @@
+# =============================================================================
+# ARGUS 2.0 - Stack Docker Compose
+# Sistema de Investigação Autônoma (bare metal / VPS local do investigador)
+#
+# Serviços:
+#   postgres :17  -> Banco relacional (evidências, casos, metadados)
+#   redis    :7   -> Cache / filas / sessões (persistência AOF)
+#   neo4j    :5   -> Grafo de relacionamentos (OSINT / dark web)
+#   tor           -> Proxy SOCKS5 + ControlPort (acesso anônimo)
+#   ollama        -> LLM local (Llama 3, Mistral, CodeLlama)
+#
+# Uso:
+#   docker compose up -d
+#   docker compose ps
+#   docker compose logs -f <serviço>
+#
+# Segurança: todas as portas são publicadas apenas em 127.0.0.1 (loopback).
+# Para acesso remoto, troque "127.0.0.1:PORT:PORT" por "PORT:PORT".
+# =============================================================================
+
+name: argus
+
+# -----------------------------------------------------------------------------
+# Redes isoladas: separa a camada de dados da camada de borda.
+#   argus-data -> bancos de dados (postgres, redis, neo4j)
+#   argus-edge -> serviços de borda (tor, ollama)
+# -----------------------------------------------------------------------------
+networks:
+  argus-data:
+    driver: bridge
+  argus-edge:
+    driver: bridge
+
+# -----------------------------------------------------------------------------
+# Volumes persistentes: dados sobrevivem a `docker compose down`.
+# -----------------------------------------------------------------------------
+volumes:
+  postgres_data:
+  redis_data:
+  neo4j_data:
+  ollama_data:
+  tor_data:
+
+services:
+
+  # ===========================================================================
+  # PostgreSQL 17 - Banco relacional principal
+  # ===========================================================================
+  postgres:
+    image: postgres:17@sha256:7958605b474b3d264a969cb3a123d6aa00ad1e1fe9da8a69984dabb704d93317
+    container_name: argus-postgres
+    restart: unless-stopped
+    networks:
+      - argus-data
+    ports:
+      - "127.0.0.1:5432:5432"
+    environment:
+      POSTGRES_USER: argus
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Execute ./install.sh para gerar .env seguro}
+      POSTGRES_DB: argus
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U argus -d argus"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ===========================================================================
+  # Redis 7 - Cache / filas / sessões (AOF habilitado para persistência)
+  # ===========================================================================
+  redis:
+    image: redis:7@sha256:e9b2e45ecd47fbb69b877cf8d045d5cccaaaed52524b6e098b4abe8212994f73
+    container_name: argus-redis
+    restart: unless-stopped
+    networks:
+      - argus-data
+    ports:
+      - "127.0.0.1:6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================================================
+  # Neo4j 5 Community - Grafo de relacionamentos (OSINT / dark web)
+  # ===========================================================================
+  neo4j:
+    image: neo4j:5-community@sha256:d9dd3dc7d1c78fa959191ff02dbdcbefadceaf83eee23428fb92a58cac8ad3fe
+    container_name: argus-neo4j
+    restart: unless-stopped
+    networks:
+      - argus-data
+    ports:
+      - "127.0.0.1:7474:7474"   # HTTP (browser Neo4j)
+      - "127.0.0.1:7687:7687"   # Bolt (driver de aplicação)
+    environment:
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:?Execute ./install.sh para gerar .env seguro}
+      NEO4J_server_memory_heap_max__size: 1G
+    volumes:
+      - neo4j_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:7474 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # ===========================================================================
+  # Tor - Proxy SOCKS5 (9050) + ControlPort (9051) para acesso anônimo
+  # ===========================================================================
+  tor:
+    build:
+      context: .
+      dockerfile: tor/Dockerfile
+    container_name: argus-tor
+    restart: unless-stopped
+    networks:
+      - argus-edge
+    environment:
+      TOR_CONTROL_PASSWORD: ${TOR_CONTROL_PASSWORD:?Execute ./install.sh para gerar .env seguro}
+    volumes:
+      - tor_data:/var/lib/tor
+    healthcheck:
+      test: ["CMD", "tor-resolve", "check.torproject.org", "127.0.0.1:9050"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 45s
+
+  # ===========================================================================
+  # Ollama - LLM local (Llama 3, Mistral, CodeLlama)
+  # GPU opcional: descomente o bloco "deploy" abaixo se houver NVIDIA GPU.
+  # ===========================================================================
+  ollama:
+    image: ollama/ollama:latest@sha256:1685741456770df6e3cceb2a945a5f75e020f658d1701509668d6f4688f1dd3f
+    container_name: argus-ollama
+    restart: unless-stopped
+    networks:
+      - argus-edge
+    ports:
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    # --- GPU NVIDIA (opcional) ----------------------------------------------
+    # Requer: nvidia-container-toolkit instalado no host.
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+    # ------------------------------------------------------------------------
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # ===========================================================================
+  # ARGUS Backend - FastAPI + WebSocket + LiteLLM
+  # ===========================================================================
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: argus-backend
+    restart: unless-stopped
+    networks:
+      - argus-data
+      - argus-edge
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - POSTGRES_HOST=postgres
+      - REDIS_HOST=redis
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USER=neo4j
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Execute ./install.sh para gerar .env seguro}
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD:?Execute ./install.sh para gerar .env seguro}
+      - LITELLM_BASE_URL=http://ollama:11434
+      - LITELLM_MODEL=ollama/llama3.2:3b
+      - TOR_PROXY=socks5h://tor:9050
+      - TOR_CONTROL_HOST=tor
+      - TOR_CONTROL_PORT=9051
+      - TOR_CONTROL_PASSWORD=${TOR_CONTROL_PASSWORD:?Execute ./install.sh para gerar .env seguro}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:?Execute ./install.sh para gerar .env seguro}
+      - ARGUS_ADMIN_USER=${ARGUS_ADMIN_USER:-admin}
+      - ARGUS_ADMIN_PASSWORD=${ARGUS_ADMIN_PASSWORD:?Execute ./install.sh para gerar .env seguro}
+      - CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # ===========================================================================
+  # ARGUS Frontend - Next.js + React 19 + Tailwind + Motion
+  # ===========================================================================
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: argus-frontend
+    restart: unless-stopped
+    networks:
+      - argus-edge
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_WS_URL=ws://localhost:8000
+    depends_on:
+      backend:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s

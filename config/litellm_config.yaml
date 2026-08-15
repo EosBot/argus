@@ -1,0 +1,345 @@
+# =============================================================================
+# LiteLLM Gateway Configuration — ARGUS 2.0
+# =============================================================================
+# Gateway unificado para 100+ providers de LLM via LiteLLM
+# (https://github.com/BerriAI/litellm)
+#
+# O sistema funciona 100% com providers GRATUITOS (Ollama, vLLM, LM Studio,
+# Hugging Face, Together AI) SEM necessidade de API keys.
+#
+# Providers PAGOS estão comentados — basta descomentar e adicionar a API key
+# via variável de ambiente (NUNCA coloque keys reais neste arquivo).
+#
+# Interface única: TODOS os providers expõem a mesma API no formato OpenAI
+# (POST /chat/completions) através do gateway.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# INSTRUÇÕES PARA ADICIONAR API KEYS
+# -----------------------------------------------------------------------------
+# 1. Exporte a key como variável de ambiente (recomendado):
+#      export OPENAI_API_KEY="sk-..."
+#      export ANTHROPIC_API_KEY="sk-ant-..."
+#      export GEMINI_API_KEY="AIza..."
+#      export TOGETHERAI_API_KEY="..."
+#      export DEEPSEEK_API_KEY="..."
+#      export GROQ_API_KEY="gsk_..."
+#      export COHERE_API_KEY="..."
+#      export AZURE_API_KEY="..."
+#      export AWS_ACCESS_KEY_ID="..." && export AWS_SECRET_ACCESS_KEY="..."
+#      export NVIDIA_NIM_API_KEY="nvapi-..."
+#      export PERPLEXITY_API_KEY="pplx-..."
+#      export XAI_API_KEY="xai-..."
+#      export MISTRAL_API_KEY="..."
+# 2. OU defina as keys no arquivo .env do projeto (carregado pelo LiteLLM).
+# 3. Descomente o bloco do provider desejado abaixo.
+# 4. Reinicie o gateway:  litellm --config config/litellm_config.yaml
+#
+# O LiteLLM lê automaticamente as variáveis de ambiente padrão de cada
+# provider (OPENAI_API_KEY, ANTHROPIC_API_KEY, etc.) — não é necessário
+# repetir a key no YAML quando a env var está definida.
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# MODEL LIST — catálogo de modelos expostos pelo gateway
+# -----------------------------------------------------------------------------
+# Cada entrada define um "model_name" (nome público usado pelo cliente) e os
+# "litellm_params" (como o gateway alcança o provider real).
+# -----------------------------------------------------------------------------
+model_list:
+
+  # ===========================================================================
+  # PROVIDERS GRATUITOS — funcionam sem API keys
+  # ===========================================================================
+
+  # --- Ollama (local, 100% gratuito, sem API key) ----------------------------
+  # Requer: ollama serve rodando em http://localhost:11434
+  # Instale modelos:  ollama pull llama3  |  ollama pull mistral  |  ollama pull codellama
+  - model_name: ollama/llama-3
+    litellm_params:
+      model: ollama/llama3            # nome do modelo no Ollama
+      api_base: http://localhost:11434
+    model_info:
+      mode: completion
+      supports_function_calling: true
+
+  - model_name: ollama/mistral
+    litellm_params:
+      model: ollama/mistral
+      api_base: http://localhost:11434
+    model_info:
+      mode: completion
+      supports_function_calling: true
+
+  - model_name: ollama/codellama
+    litellm_params:
+      model: ollama/codellama
+      api_base: http://localhost:11434
+    model_info:
+      mode: completion
+      supports_function_calling: true
+
+  # --- vLLM (local, gratuito, servidor OpenAI-compatível) --------------------
+  # Requer: vllm serve <modelo> --port 8000
+  - model_name: vllm/llama-3-8b
+    litellm_params:
+      model: openai/llama-3-8b-instruct   # prefixo openai/ = formato OpenAI
+      api_base: http://localhost:8000/v1
+      api_key: dummy                       # vLLM local não valida keys
+    model_info:
+      mode: completion
+
+  # --- LM Studio (local, gratuito) -------------------------------------------
+  # Requer: LM Studio rodando com servidor local ativo (porta padrão 1234)
+  - model_name: lmstudio/local-model
+    litellm_params:
+      model: openai/lmstudio-model
+      api_base: http://localhost:1234/v1
+      api_key: dummy
+    model_info:
+      mode: completion
+
+  # --- Hugging Face Inference (gratuito com token HF opcional) ---------------
+  # Sem token: usa a quota gratuita. Com token: export HF_TOKEN=...
+  - model_name: hf/mistral-7b
+    litellm_params:
+      model: huggingface/mistralai/Mistral-7B-Instruct-v0.3
+      api_base: https://api-inference.huggingface.co/models
+    model_info:
+      mode: completion
+
+  - model_name: hf/llama-3-8b
+    litellm_params:
+      model: huggingface/meta-llama/Meta-Llama-3-8B-Instruct
+      api_base: https://api-inference.huggingface.co/models
+    model_info:
+      mode: completion
+
+  # --- Together AI (gratuito com quota de trial, key opcional) ---------------
+  # Sem key: funciona com quota gratuita. Com key: export TOGETHERAI_API_KEY=...
+  - model_name: together/llama-3-8b
+    litellm_params:
+      model: together_ai/meta-llama/Meta-Llama-3-8B-Instruct-Turbo
+    model_info:
+      mode: completion
+
+  - model_name: together/mistral-7b
+    litellm_params:
+      model: together_ai/mistralai/Mistral-7B-Instruct-v0.3
+    model_info:
+      mode: completion
+
+  # ===========================================================================
+  # PROVIDERS PAGOS — descomente o bloco e defina a API key via env var
+  # ===========================================================================
+
+  # --- OpenAI ----------------------------------------------------------------
+  # Key: export OPENAI_API_KEY="sk-..."
+  # - model_name: openai/gpt-4o
+  #   litellm_params:
+  #     model: gpt-4o
+  #   model_info:
+  #     mode: completion
+  #     supports_function_calling: true
+  #
+  # - model_name: openai/gpt-4o-mini
+  #   litellm_params:
+  #     model: gpt-4o-mini
+  #   model_info:
+  #     mode: completion
+  #     supports_function_calling: true
+
+  # --- Anthropic (Claude) ----------------------------------------------------
+  # Key: export ANTHROPIC_API_KEY="sk-ant-..."
+  # - model_name: anthropic/claude-3-5-sonnet
+  #   litellm_params:
+  #     model: claude-3-5-sonnet-20241022
+  #   model_info:
+  #     mode: completion
+  #     supports_function_calling: true
+  #
+  # - model_name: anthropic/claude-3-5-haiku
+  #   litellm_params:
+  #     model: claude-3-5-haiku-20241022
+  #   model_info:
+  #     mode: completion
+  #     supports_function_calling: true
+
+  # --- Google (Gemini) -------------------------------------------------------
+  # Key: export GEMINI_API_KEY="AIza..."
+  # - model_name: google/gemini-1.5-pro
+  #   litellm_params:
+  #     model: gemini/gemini-1.5-pro
+  #   model_info:
+  #     mode: completion
+  #     supports_function_calling: true
+  #
+  # - model_name: google/gemini-1.5-flash
+  #   litellm_params:
+  #     model: gemini/gemini-1.5-flash
+  #   model_info:
+  #     mode: completion
+  #     supports_function_calling: true
+
+  # --- xAI (Grok) ------------------------------------------------------------
+  # Key: export XAI_API_KEY="xai-..."
+  # - model_name: xai/grok-2
+  #   litellm_params:
+  #     model: xai/grok-2-latest
+  #   model_info:
+  #     mode: completion
+
+  # --- DeepSeek --------------------------------------------------------------
+  # Key: export DEEPSEEK_API_KEY="..."
+  # - model_name: deepseek/deepseek-chat
+  #   litellm_params:
+  #     model: deepseek/deepseek-chat
+  #   model_info:
+  #     mode: completion
+  #     supports_function_calling: true
+  #
+  # - model_name: deepseek/deepseek-coder
+  #   litellm_params:
+  #     model: deepseek/deepseek-coder
+  #   model_info:
+  #     mode: completion
+
+  # --- Mistral ---------------------------------------------------------------
+  # Key: export MISTRAL_API_KEY="..."
+  # - model_name: mistral/mistral-large
+  #   litellm_params:
+  #     model: mistral/mistral-large-latest
+  #   model_info:
+  #     mode: completion
+  #     supports_function_calling: true
+
+  # --- Groq (ultra-rápido, tem tier gratuito) --------------------------------
+  # Key: export GROQ_API_KEY="gsk_..."
+  # - model_name: groq/llama-3-70b
+  #   litellm_params:
+  #     model: groq/llama-3-70b-8192
+  #   model_info:
+  #     mode: completion
+  #     supports_function_calling: true
+  #
+  # - model_name: groq/mixtral-8x7b
+  #   litellm_params:
+  #     model: groq/mixtral-8x7b-32768
+  #   model_info:
+  #     mode: completion
+
+  # --- Cohere ----------------------------------------------------------------
+  # Key: export COHERE_API_KEY="..."
+  # - model_name: cohere/command-r-plus
+  #   litellm_params:
+  #     model: cohere/command-r-plus
+  #   model_info:
+  #     mode: completion
+
+  # --- Azure OpenAI ----------------------------------------------------------
+  # Keys: export AZURE_API_KEY="..." e defina api_base/version abaixo
+  # - model_name: azure/gpt-4o
+  #   litellm_params:
+  #     model: azure/gpt-4o
+  #     api_base: https://SEU-RESOURCE.openai.azure.com/
+  #     api_version: 2024-06-01
+  #     api_key: os.environ/AZURE_API_KEY
+  #   model_info:
+  #     mode: completion
+
+  # --- AWS Bedrock -----------------------------------------------------------
+  # Keys: export AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY / AWS_REGION_NAME
+  # - model_name: bedrock/claude-3-5-sonnet
+  #   litellm_params:
+  #     model: bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0
+  #     aws_region_name: us-east-1
+  #   model_info:
+  #     mode: completion
+  #
+  # - model_name: bedrock/llama-3-70b
+  #   litellm_params:
+  #     model: bedrock/meta.llama3-70b-instruct-v1:0
+  #     aws_region_name: us-east-1
+  #   model_info:
+  #     mode: completion
+
+  # --- NVIDIA NIM ------------------------------------------------------------
+  # Key: export NVIDIA_NIM_API_KEY="nvapi-..."
+  # - model_name: nvidia/llama-3-70b
+  #   litellm_params:
+  #     model: nvidia_nim/meta/llama3-70b-instruct
+  #   model_info:
+  #     mode: completion
+
+  # --- Perplexity ------------------------------------------------------------
+  # Key: export PERPLEXITY_API_KEY="pplx-..."
+  # - model_name: perplexity/sonar
+  #   litellm_params:
+  #     model: perplexity/sonar-medium-online
+  #   model_info:
+  #     mode: completion
+
+# -----------------------------------------------------------------------------
+# ROUTER SETTINGS — fallback automático e balanceamento
+# -----------------------------------------------------------------------------
+# Estratégia de fallback (em ordem):
+#   1. Ollama (local, gratuito) → 2. Together AI (gratuito) → 3. Provider pago
+# Se o primeiro provider falhar (timeout, rate limit, erro), o LiteLLM tenta
+# automaticamente o próximo da cadeia sem intervenção do cliente.
+# -----------------------------------------------------------------------------
+router_settings:
+  # Cadeia de fallback: tenta Ollama primeiro, depois Together, depois pago
+  fallbacks:
+    - {"ollama/llama-3": ["together/llama-3-8b", "openai/gpt-4o-mini"]}
+    - {"ollama/mistral": ["together/mistral-7b", "openai/gpt-4o-mini"]}
+    - {"ollama/codellama": ["together/llama-3-8b", "openai/gpt-4o-mini"]}
+    - {"together/llama-3-8b": ["openai/gpt-4o-mini"]}
+    - {"together/mistral-7b": ["openai/gpt-4o-mini"]}
+
+  # Balanceamento de carga entre modelos equivalentes (round-robin)
+  routing_strategy: "simple-shuffle"
+
+  # Número de tentativas antes de desistir
+  num_retries: 3
+
+  # Tempo máximo de espera por resposta (segundos)
+  request_timeout: 600
+
+  # Cooldown após falha de um provider (segundos)
+  cooldown_time: 30
+
+  # Permitir que o cliente sobrescreva o modelo via parâmetro
+  enable_pre_call_checks: true
+
+  # Distribuição de peso entre modelos do mesmo grupo (default: igual)
+  # model_group_alias: {}
+
+# -----------------------------------------------------------------------------
+# CACHE — reduz custos e latência em chamadas repetidas
+# -----------------------------------------------------------------------------
+litellm_settings:
+  # Cache semântico em memória (desative em produção multi-instância)
+  cache: true
+  cache_params:
+    type: redis            # use "redis" em produção; "local" para dev
+    supported_call_types: ["completion", "acompletion"]
+    ttl: 3600              # 1 hora
+
+  # Log de custo por chamada (requer tabela de preços do LiteLLM)
+  # turn_off_message_logging: false
+
+  # Drop params desconhecidos em vez de falhar
+  drop_params: true
+
+# -----------------------------------------------------------------------------
+# SERVIDOR — interface unificada OpenAI-format
+# -----------------------------------------------------------------------------
+general_settings:
+  # Porta do gateway (padrão LiteLLM: 4000)
+  # master_key: os.environ/LITELLM_MASTER_KEY   # descomente para proteger o gateway
+
+  # Endpoint de health check: GET /health/liveliness
+  # health_check: true
+
+  # Database para tracking de uso (opcional)
+  # database_url: os.environ/DATABASE_URL

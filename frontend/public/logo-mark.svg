@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" fill="none" role="img" aria-label="ARGUS 2.0 logo">
+  <defs>
+    <radialGradient id="sweepGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00F0FF" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="#00F0FF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00FF41" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#00FF41" stop-opacity="0.25"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="1.4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+    @keyframes glint { 0%, 100% { opacity: 0.9; } 50% { opacity: 0.3; } }
+    .eyes { animation: spin 14s linear infinite; transform-origin: 50px 50px; }
+    .sweep { animation: spin 4s linear infinite; transform-origin: 50px 50px; }
+    .pulse { animation: pulse 2.4s ease-in-out infinite; }
+    .pulse2 { animation: pulse 2.4s ease-in-out infinite 1.2s; }
+    .glint { animation: glint 3s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) {
+      .eyes, .sweep, .pulse, .pulse2, .glint { animation: none !important; }
+    }
+  </style>
+
+  <!-- Ambient glow -->
+  <circle cx="50" cy="50" r="48" fill="#00FF41" fill-opacity="0.04"/>
+
+  <!-- Outer ring -->
+  <circle cx="50" cy="50" r="46" fill="none" stroke="url(#ringGrad)" stroke-width="2.5"/>
+
+  <!-- Radar rings -->
+  <circle cx="50" cy="50" r="36" stroke="#00FF41" stroke-opacity="0.10" stroke-width="0.5" fill="none"/>
+  <circle cx="50" cy="50" r="26" stroke="#00FF41" stroke-opacity="0.14" stroke-width="0.5" fill="none"/>
+  <circle cx="50" cy="50" r="16" stroke="#00FF41" stroke-opacity="0.18" stroke-width="0.5" fill="none"/>
+
+  <!-- Cross-hairs -->
+  <line x1="50" y1="2" x2="50" y2="98" stroke="#00FF41" stroke-opacity="0.06" stroke-width="0.4"/>
+  <line x1="2" y1="50" x2="98" y2="50" stroke="#00FF41" stroke-opacity="0.06" stroke-width="0.4"/>
+
+  <!-- Radar sweep -->
+  <g class="sweep">
+    <path d="M50,50 L50,4 A46,46 0 0 1 82.53,17.47 Z" fill="url(#sweepGrad)"/>
+    <line x1="50" y1="50" x2="82.53" y2="17.47" stroke="#00F0FF" stroke-width="0.6" stroke-opacity="0.5"/>
+  </g>
+
+  <!-- Rotating eyes (Argos Panoptes — 8 eyes) -->
+  <g class="eyes" filter="url(#glow)">
+    <circle cx="96" cy="50" r="2.8" fill="#00FF41"/>
+    <circle cx="82.53" cy="82.53" r="2.8" fill="#00FF41"/>
+    <circle cx="50" cy="96" r="2.8" fill="#00FF41"/>
+    <circle cx="17.47" cy="82.53" r="2.8" fill="#00FF41"/>
+    <circle cx="4" cy="50" r="2.8" fill="#00FF41"/>
+    <circle cx="17.47" cy="17.47" r="2.8" fill="#00FF41"/>
+    <circle cx="50" cy="4" r="2.8" fill="#00FF41"/>
+    <circle cx="82.53" cy="17.47" r="2.8" fill="#00FF41"/>
+  </g>
+
+  <!-- Hexagon of nodes -->
+  <g fill="none" stroke="#00FF41" stroke-width="1.5">
+    <polygon points="68,50 59,65.59 41,65.59 32,50 41,34.41 59,34.41"/>
+    <line x1="50" y1="50" x2="68" y2="50"/>
+    <line x1="50" y1="50" x2="59" y2="65.59"/>
+    <line x1="50" y1="50" x2="41" y2="65.59"/>
+    <line x1="50" y1="50" x2="32" y2="50"/>
+    <line x1="50" y1="50" x2="41" y2="34.41"/>
+    <line x1="50" y1="50" x2="59" y2="34.41"/>
+  </g>
+
+  <!-- Hex node vertices (amber pulse) -->
+  <g fill="#FFB020">
+    <circle class="pulse" cx="68" cy="50" r="2.4"/>
+    <circle class="pulse2" cx="59" cy="65.59" r="2.4"/>
+    <circle class="pulse" cx="41" cy="65.59" r="2.4"/>
+    <circle class="pulse2" cx="32" cy="50" r="2.4"/>
+    <circle class="pulse" cx="41" cy="34.41" r="2.4"/>
+    <circle class="pulse2" cx="59" cy="34.41" r="2.4"/>
+  </g>
+
+  <!-- Central eye (cyan iris, green pupil) -->
+  <g filter="url(#glow)">
+    <circle cx="50" cy="50" r="7" fill="#00F0FF" fill-opacity="0.12" stroke="#00F0FF" stroke-width="1"/>
+    <circle cx="50" cy="50" r="4" fill="#00FF41"/>
+    <circle cx="50" cy="50" r="1.8" fill="#030712"/>
+    <circle class="glint" cx="51.5" cy="48.5" r="0.7" fill="#f8fafc" fill-opacity="0.9"/>
+  </g>
+</svg>

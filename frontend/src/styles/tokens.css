@@ -1,0 +1,295 @@
+/* ============================================================
+   ARGUS 2.0 — Design System Tokens
+   CSS custom properties · dark theme default
+   ============================================================ */
+
+:root {
+  color-scheme: dark;
+
+  /* ---------- Surfaces (dark, layered) ---------- */
+  --surface-0: #030712;   /* app background */
+  --surface-1: #0b1120;   /* panels / cards */
+  --surface-2: #111a2e;   /* raised elements */
+  --surface-3: #1a2438;   /* hover / active surfaces */
+
+  /* ---------- Accent ---------- */
+  --accent-primary: #00FF41;   /* terminal green — primary action */
+  --accent-primary-dim: #00cc34;
+  --accent-secondary: #00F0FF; /* cyan — secondary / info */
+  --accent-secondary-dim: #00b8c4;
+
+  /* ---------- Status ---------- */
+  --status-success: #00FF41;
+  --status-warning: #FFB020;
+  --status-danger: #FF3B30;
+  --status-info: #00F0FF;
+  --status-neutral: #64748b;
+
+  /* ---------- Text ---------- */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-on-accent: #030712;
+
+  /* ---------- Borders ---------- */
+  --border-subtle: rgba(148, 163, 184, 0.16);
+  --border-strong: rgba(148, 163, 184, 0.32);
+  --border-accent: rgba(0, 255, 65, 0.5);
+
+  /* ---------- Typography ---------- */
+  --font-sans: 'Geist Sans', 'Geist', -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular,
+    Menlo, Consolas, monospace;
+
+  --text-xs: 0.75rem;      /* 12px */
+  --text-sm: 0.875rem;     /* 14px */
+  --text-base: 1rem;       /* 16px */
+  --text-lg: 1.125rem;     /* 18px */
+  --text-xl: 1.25rem;      /* 20px */
+  --text-2xl: 1.5rem;      /* 24px */
+  --text-3xl: 1.875rem;    /* 30px */
+  --text-4xl: 2.25rem;     /* 36px */
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.75;
+
+  /* ---------- Spacing (4px scale) ---------- */
+  --space-0: 0;
+  --space-1: 0.25rem;   /* 4px  */
+  --space-2: 0.5rem;    /* 8px  */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+  --space-20: 5rem;     /* 80px */
+  --space-24: 6rem;     /* 96px */
+
+  /* ---------- Border radius ---------- */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
+
+  /* ---------- Shadows ---------- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.55);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.65);
+
+  /* ---------- Glow effects ---------- */
+  --glow-primary: 0 0 8px rgba(0, 255, 65, 0.55),
+    0 0 24px rgba(0, 255, 65, 0.25);
+  --glow-secondary: 0 0 8px rgba(0, 240, 255, 0.55),
+    0 0 24px rgba(0, 240, 255, 0.25);
+  --glow-danger: 0 0 8px rgba(255, 59, 48, 0.55),
+    0 0 24px rgba(255, 59, 48, 0.25);
+
+  /* ---------- Motion ---------- */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+
+  /* ---------- Z-index ---------- */
+  --z-base: 0;
+  --z-sticky: 100;
+  --z-overlay: 1000;
+  --z-modal: 1100;
+  --z-toast: 1200;
+
+  /* ---------- Terminal theme ---------- */
+  --terminal-green: #00FF41;
+  --terminal-green-dim: #00cc34;
+  --terminal-bg: #0a0a0a;
+  --terminal-glow: rgba(0, 255, 65, 0.15);
+  --terminal-scanline: rgba(0, 0, 0, 0.06);
+  --terminal-flicker: rgba(0, 255, 65, 0.03);
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Terminal theme — scanline + CRT glow effects ---------- */
+[data-theme="terminal"] .terminal-scanlines {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay, 1000);
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--terminal-scanline, rgba(0, 0, 0, 0.06)) 0px,
+    var(--terminal-scanline, rgba(0, 0, 0, 0.06)) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: multiply;
+}
+
+[data-theme="terminal"] .terminal-crt-glow {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-overlay, 1000) - 1);
+  box-shadow: inset 0 0 120px var(--terminal-glow, rgba(0, 255, 65, 0.15)),
+    inset 0 0 40px var(--terminal-flicker, rgba(0, 255, 65, 0.03));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="terminal"] .terminal-scanlines,
+  [data-theme="terminal"] .terminal-crt-glow {
+    display: none;
+  }
+}
+
+/* ============================================================
+   Global styles — applied at body level
+   ============================================================ */
+
+/* ---------- Reset ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+  -webkit-text-size-adjust: 100%;
+  -moz-tab-size: 4;
+  tab-size: 4;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--surface-0);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+/* ---------- Scrollbar (custom) ---------- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+/* ---------- Selection ---------- */
+::selection {
+  background: rgba(0, 255, 65, 0.25);
+  color: var(--text-primary);
+}
+
+/* ---------- Focus outline ---------- */
+:focus-visible {
+  outline: 1px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* ---------- Keyframe animations ---------- */
+@keyframes argus-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes argus-glow {
+  0%, 100% { box-shadow: 0 0 4px var(--accent-primary), 0 0 8px rgba(0, 255, 65, 0.3); }
+  50% { box-shadow: 0 0 8px var(--accent-primary), 0 0 16px rgba(0, 255, 65, 0.5); }
+}
+
+@keyframes argus-scan {
+  0% { transform: translateY(-100%); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+@keyframes argus-flicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 1; }
+  93% { opacity: 0.8; }
+  94% { opacity: 1; }
+  96% { opacity: 0.9; }
+  97% { opacity: 1; }
+}
+
+@keyframes argus-typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+/* ---------- Utility classes ---------- */
+.argus-glow-text {
+  text-shadow: var(--glow-primary);
+}
+
+.argus-glow-box {
+  box-shadow: var(--glow-primary);
+}
+
+.argus-mono {
+  font-family: var(--font-mono);
+}
+
+/* ---------- Next.js root ---------- */
+#__next,
+main {
+  height: 100%;
+}

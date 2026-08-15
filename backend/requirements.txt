@@ -1,0 +1,63 @@
+# =============================================================================
+# ARGUS 2.0 — Backend Dependencies (pinned 2026-08-14 — F6 supply chain)
+# Versões exatas verificadas no container argus-backend (pip list)
+# =============================================================================
+
+# --- Web framework ------------------------------------------------------------
+fastapi==0.141.1
+uvicorn[standard]==0.52.3
+python-multipart==0.0.32
+
+# --- Data validation ---------------------------------------------------------
+pydantic==2.13.4
+pydantic-settings==2.15.0
+email-validator==2.2.0
+
+# --- Database ----------------------------------------------------------------
+sqlalchemy[asyncio]==2.0.52
+asyncpg==0.31.0
+alembic==1.19.1
+
+# --- Cache -------------------------------------------------------------------
+redis[hiredis]==8.1.0
+
+# --- Graph database ----------------------------------------------------------
+neo4j==6.2.0
+
+# --- Authentication ----------------------------------------------------------
+python-jose[cryptography]==3.5.0
+bcrypt==5.0.0
+cryptography==50.0.0
+
+# --- HTTP client -------------------------------------------------------------
+httpx==0.28.1
+
+# --- Observability -----------------------------------------------------------
+structlog==26.1.0
+
+# --- LLM gateway -------------------------------------------------------------
+litellm==1.96.2
+openai==2.54.0
+
+# --- Task scheduling ----------------------------------------------------------
+apscheduler==3.11.3
+
+# --- Orchestration ------------------------------------------------------------
+transitions==0.9.3
+
+# --- OPSEC (Tor control — usado por backend/opsec/tor_manager.py e preflight.py)
+stem==1.8.2
+
+# --- OSINT (dark web search/scrape — usado por argus_engine/search.py e argus_engine/scrape.py,
+# montado como lib no container via ./argus_engine:/app/argus_engine)
+beautifulsoup4==4.15.0
+pysocks==1.7.1
+soupsieve==2.9.2
+
+# --- Evidence reports --------------------------------------------------------
+reportlab==4.4.3
+PyYAML==6.0.3
+
+# --- People OSINT executors --------------------------------------------------
+sherlock-project==0.16.0
+ddgs==9.14.4
