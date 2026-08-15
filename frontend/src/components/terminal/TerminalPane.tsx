@@ -79,9 +79,9 @@ const INJECTED_STYLES = `
   flex-direction: column;
   border-radius: 4px;
   overflow: hidden;
-  background: var(--surface-1, #0b1120);
-  border: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.10));
-  box-shadow: 0 0 0 1px rgba(0, 255, 65, 0.04), 0 8px 32px rgba(0, 0, 0, 0.4);
+  background: #060b15;
+  border: 1px solid rgba(0, 255, 65, 0.18);
+  box-shadow: 0 0 0 1px rgba(0, 255, 65, 0.04), 0 14px 42px rgba(0, 0, 0, 0.42), 0 0 32px rgba(0, 255, 65, .05);
   font-family: var(--font-mono, monospace);
 }
 
@@ -96,7 +96,9 @@ const INJECTED_STYLES = `
   border-bottom: 1px solid var(--border-subtle, rgba(148, 163, 184, 0.08));
   user-select: none;
   flex: none;
+  position: relative;
 }
+.ts-terminal .ts-titlebar::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: linear-gradient(90deg, transparent, rgba(0,255,65,.5), rgba(0,240,255,.5), transparent); opacity: .55; }
 .ts-terminal .ts-titlebar-left {
   display: flex;
   align-items: center;
@@ -120,6 +122,7 @@ const INJECTED_STYLES = `
   flex: none;
   white-space: nowrap;
 }
+.ts-terminal .ts-signal-label { color: var(--accent-secondary, #00F0FF); font-size: 9px; letter-spacing: .12em; white-space: nowrap; }
 .ts-terminal .ts-titlebar-center {
   flex: 1;
   min-width: 0;
@@ -161,6 +164,7 @@ const INJECTED_STYLES = `
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }
 }
+@keyframes ts-radar { to { transform: rotate(360deg); } }
 .ts-terminal .ts-tools {
   display: flex;
   gap: 2px;
@@ -189,7 +193,9 @@ const INJECTED_STYLES = `
 }
 
 /* ---- Body ---- */
-.ts-terminal .ts-body { position: relative; flex: 1; min-height: 0; display: flex; }
+.ts-terminal .ts-body { position: relative; flex: 1; min-height: 0; display: flex; overflow: hidden; background: radial-gradient(circle at 75% 10%, rgba(0,240,255,.05), transparent 28%), #060b15; }
+.ts-terminal .ts-body::before { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .28; background-image: linear-gradient(rgba(0,255,65,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,65,.035) 1px, transparent 1px); background-size: 32px 32px; mask-image: linear-gradient(120deg, #000, transparent 65%); }
+.ts-terminal .ts-body::after { content: ''; position: absolute; width: 380px; aspect-ratio: 1; right: -170px; bottom: -250px; border: 1px solid rgba(0,240,255,.10); border-radius: 50%; box-shadow: 0 0 0 18px rgba(0,240,255,.018), 0 0 0 52px rgba(0,240,255,.012); animation: ts-radar 18s linear infinite; pointer-events: none; }
 .ts-terminal .ts-term-host { flex: 1; min-width: 0; padding: 6px 8px 8px; }
 
 /* ---- Search overlay ---- */
@@ -291,7 +297,7 @@ const INJECTED_STYLES = `
 .ts-terminal .xterm .xterm-viewport::-webkit-scrollbar-track { background: transparent; }
 
 @media (prefers-reduced-motion: reduce) {
-  .ts-terminal .ts-status-connecting { animation: none !important; }
+  .ts-terminal .ts-status-connecting, .ts-terminal .ts-body::after { animation: none !important; }
 }
 `
 
@@ -833,6 +839,7 @@ export default function TerminalPane({
         <div className="ts-titlebar-left">
           <ArgusMark />
           <span className="ts-app-name">ARGUS</span>
+          <span className="ts-signal-label">/ LIVE FEED</span>
         </div>
         <span className="ts-titlebar-center">{breadcrumbText}</span>
         <div className="ts-titlebar-right">

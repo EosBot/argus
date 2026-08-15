@@ -34,10 +34,28 @@ export default function LoginPage() {
 
   return (
     <div className={styles.auth}>
+      <div className={styles.ambient} aria-hidden="true">
+        <span className={styles.orbit} />
+        <span className={`${styles.orbit} ${styles.orbitSecondary}`} />
+        <span className={styles.beam} />
+      </div>
       <div className={styles.card}>
         <div className={styles.brand}>
-          <h1 className={styles.title}>ARGUS</h1>
-          <span className={styles.badge}>v2.0</span>
+          <div className={styles.brandMark}>
+            <img src="/logo-mark.svg" alt="" className={styles.logo} />
+            <div>
+              <div className={styles.kicker}>SIGNAL INTELLIGENCE</div>
+              <h1 className={styles.title}>ARGUS</h1>
+            </div>
+          </div>
+          <span className={styles.badge}>v2.0 <i /></span>
+        </div>
+
+        <div className={styles.accessLine}>
+          <span className={styles.accessDot} />
+          <span>SECURE OPERATIONS CONSOLE</span>
+          <span className={styles.accessRule} />
+          <span>AUTH / 01</span>
         </div>
 
         <p className={styles.subtitle}>
@@ -85,7 +103,8 @@ export default function LoginPage() {
           )}
 
           <button type="submit" className={styles.submit} disabled={submitting}>
-            {submitting ? "Autenticando…" : "Acessar"}
+            <span>{submitting ? "Autenticando…" : "Acessar console"}</span>
+            <span className={styles.submitArrow} aria-hidden="true">↗</span>
           </button>
         </form>
 
