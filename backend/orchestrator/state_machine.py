@@ -96,6 +96,7 @@ class InvestigationStateMachine:
             states=InvestigationStatus,
             transitions=_TRANSITIONS,
             initial=initial_status,
+            model_attribute="_state",
             send_event=True,
             after_state_change=self._on_state_change,
         )
@@ -103,7 +104,7 @@ class InvestigationStateMachine:
     @property
     def state(self) -> InvestigationStatus:
         """Return current investigation status."""
-        return self._machine.state
+        return InvestigationStatus(self._state)
 
     @property
     def is_active(self) -> bool:
@@ -136,10 +137,12 @@ class InvestigationStateMachine:
 
     def _on_state_change(self, event: Any) -> None:
         """Callback fired after every state transition."""
+        source = str(event.transition.source).lower()
+        destination = str(event.transition.dest).lower()
         transition_data = {
             "investigation_id": self.investigation_id,
-            "from_state": event.transition.source,
-            "to_state": event.transition.dest,
+            "from_state": source,
+            "to_state": destination,
             "trigger": event.event.name,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
@@ -147,8 +150,8 @@ class InvestigationStateMachine:
         logger.info(
             "Investigation %s: %s → %s (trigger: %s)",
             self.investigation_id,
-            event.transition.source,
-            event.transition.dest,
+            source,
+            destination,
             event.event.name,
         )
 

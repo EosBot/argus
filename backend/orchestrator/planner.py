@@ -10,6 +10,7 @@ The loop continues until the investigation goal is achieved or max iterations re
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from dataclasses import dataclass, field
@@ -196,10 +197,12 @@ class ReActPlanner:
         model: str | None = None,
         max_iterations: int = 5,
         max_steps_per_plan: int = 10,
+        planning_timeout_seconds: float = 15.0,
     ) -> None:
         self._model = model or settings.litellm_model
         self._max_iterations = max_iterations
         self._max_steps_per_plan = max_steps_per_plan
+        self._planning_timeout_seconds = planning_timeout_seconds
 
     async def create_plan(
         self,
@@ -239,12 +242,15 @@ class ReActPlanner:
             # Thought + Action: call LLM to generate/extend plan
             response: Any = None
             try:
-                response = await litellm.acompletion(
-                    model=self._model,
-                    messages=messages,
-                    temperature=0.3,
-                    max_tokens=4096,
-                    response_format={"type": "json_object"},
+                response = await asyncio.wait_for(
+                    litellm.acompletion(
+                        model=self._model,
+                        messages=messages,
+                        temperature=0.3,
+                        max_tokens=1200,
+                        response_format={"type": "json_object"},
+                    ),
+                    timeout=self._planning_timeout_seconds,
                 )
                 content = response.choices[0].message.content or "{}"
                 plan_data = json.loads(content)
@@ -257,7 +263,14 @@ class ReActPlanner:
                     "content": "Invalid JSON. Please respond with valid JSON only.",
                 })
                 continue
-            except Exception as exc:
+            except TimeoutError:
+                logger.warning(
+                    "Planning timed out after %.1fs; using deterministic fallback",
+                    self._planning_timeout_seconds,
+                )
+                plan = self._create_fallback_plan(plan_id, investigation_id, goal, context)
+                break
+            except Exception:
                 logger.exception("ReAct iteration %d: LLM call failed", iteration + 1)
                 # Fallback: create a minimal plan
                 plan = self._create_fallback_plan(plan_id, investigation_id, goal, context)
