@@ -39,13 +39,14 @@
 .orbit {
   position: absolute; width: min(72vw, 760px); aspect-ratio: 1; left: 50%; top: 50%;
   border: 1px solid rgba(0, 255, 65, .12); border-radius: 50%;
-  transform: translate(-50%, -50%) rotate(-22deg);
+  transform: translate(-50%, -50%);
   box-shadow: 0 0 80px rgba(0, 255, 65, .06), inset 0 0 80px rgba(0, 240, 255, .035);
   animation: orbit 26s linear infinite;
 }
-.orbit::before { content: ''; position: absolute; width: 42%; height: 1px; top: 12%; left: 5%; background: linear-gradient(90deg, transparent, var(--accent-secondary)); opacity: .7; }
+.orbit::before { content: ''; position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from -33deg, rgba(0, 240, 255, .20) 0deg, rgba(0, 240, 255, .05) 4deg, transparent 8deg 360deg); -webkit-mask: radial-gradient(circle, transparent 0 7%, #000 7.5% 100%); mask: radial-gradient(circle, transparent 0 7%, #000 7.5% 100%); animation: scanner 4s linear infinite; }
+.orbit::after { content: ''; position: absolute; width: 50%; height: 1px; left: 50%; top: 50%; transform-origin: left center; background: linear-gradient(90deg, rgba(0, 240, 255, .85), rgba(0, 240, 255, .14), transparent); box-shadow: 0 0 8px rgba(0,240,255,.38); animation: scanner-arm 4s linear infinite; }
 .orbitSecondary { width: min(48vw, 500px); border-color: rgba(0, 240, 255, .10); transform: translate(-50%, -50%) rotate(58deg); animation-duration: 18s; animation-direction: reverse; }
-.beam { position: absolute; width: 1px; height: 70vh; left: 50%; top: 15%; background: linear-gradient(transparent, rgba(0,255,65,.22), transparent); animation: beam 5s ease-in-out infinite; }
+.beam { display: none; }
 
 .card {
   width: min(100%, 448px); position: relative; z-index: 1; padding: 32px;
@@ -82,6 +83,8 @@
 .loading { display: grid; place-items: center; min-height: 100vh; color: var(--text-muted); font: 11px var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
 
 @keyframes orbit { to { transform: translate(-50%, -50%) rotate(338deg); } }
+@keyframes scanner { to { transform: rotate(360deg); } }
+@keyframes scanner-arm { from { transform: rotate(-33deg); } to { transform: rotate(327deg); } }
 @keyframes beam { 0%, 100% { opacity: .2; transform: scaleY(.7); } 50% { opacity: .8; transform: scaleY(1); } }
 @media (max-width: 520px) { .card { padding: 25px 20px; } .logo { width: 54px; height: 54px; } .accessLine { margin-top: 20px; } }
-@media (prefers-reduced-motion: reduce) { .orbit, .beam { animation: none; } .submit:hover:not(:disabled) { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .orbit, .orbit::before, .orbit::after, .beam { animation: none; } .orbit::after { transform: rotate(-33deg); } .submit:hover:not(:disabled) { transform: none; } }
